@@ -2,33 +2,30 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Game Tính Nhanh</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solo tính nhẩm (by TDH HK65)</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
+  <div id="setup" class="container">
+    <h1>Solo tính nhẩm (by TDH HK65)</h1>
+    <input id="player-name" type="text" placeholder="Nhập tên của bạn">
+    <br><br>
+    <label for="time-select">Chọn thời gian:</label>
+    <select id="time-select"></select>
+    <br><br>
+    <button id="start-btn">Bắt đầu</button>
+  </div>
 
-    <!-- Nhập tên -->
-    <div id="name-screen">
-      <h2>Nhập bí danh</h2>
-      <input type="text" id="username" placeholder="Tên của bạn...">
-      <button onclick="startGame()">Bắt đầu</button>
-    </div>
-
-    <!-- Game -->
-    <div id="game-screen" style="display:none;">
-      <h1>Solo tính nhẩm (by TDH HK65)</h1>
-      <div id="question"></div>
-      <input type="text" id="answer" placeholder="Nhập đáp án...">
-      <button onclick="checkAnswer()">Trả lời</button>
-      <p id="warning" class="warning"></p>
+  <div id="game" class="container" style="display:none;">
+    <div id="info">
+      <p>Tên: <span id="show-name"></span></p>
       <p>Điểm: <span id="score">0</span></p>
-      <div id="score-fly-container"></div>
-
-      <h2>Bảng xếp hạng</h2>
-      <ul id="leaderboard"></ul>
+      <p>Thời gian: <span id="time">0</span> giây</p>
     </div>
-
+    <h2 id="question"></h2>
+    <input id="answer" type="text" placeholder="Nhập câu trả lời và nhấn Enter">
+    <p id="warning" style="color:red;"></p>
   </div>
 
   <script src="script.js"></script>
