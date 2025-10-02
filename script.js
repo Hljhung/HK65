@@ -1,4 +1,4 @@
-const API_URL = https://hk65backend-ewcz.onrender.com/; 
+const API_BASE = "https://hk65backend-ewcz.onrender.com";
 
 let username = "";
 let score = 0;
