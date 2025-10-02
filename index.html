@@ -2,153 +2,35 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Solo tính nhẩm (by TDH HK65)</title>
-  <style>
-    body {
-      background-color: #007acc;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    #leaderboard {
-      margin-top: 20px;
-      background: white;
-      color: black;
-      padding: 10px;
-      border-radius: 8px;
-      display: inline-block;
-      min-width: 250px;
-    }
-    input, select, button {
-      padding: 8px;
-      margin: 5px;
-      border-radius: 5px;
-      border: none;
-    }
-    button {
-      cursor: pointer;
-      background: darkblue;
-      color: white;
-    }
-  </style>
+  <title>Game Tính Nhanh</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Solo tính nhẩm (by TDH HK65)</h1>
+  <div class="container">
 
-  <div>
-    <input id="username" placeholder="Nhập tên của bạn">
-    <select id="timeSelect"></select>
-    <button onclick="startGame()">Bắt đầu</button>
+    <!-- Nhập tên -->
+    <div id="name-screen">
+      <h2>Nhập tên để bắt đầu</h2>
+      <input type="text" id="username" placeholder="Tên của bạn...">
+      <button onclick="startGame()">Bắt đầu</button>
+    </div>
+
+    <!-- Game -->
+    <div id="game-screen" style="display:none;">
+      <h1>Game Tính Nhanh</h1>
+      <div id="question"></div>
+      <input type="text" id="answer" placeholder="Nhập đáp án...">
+      <button onclick="checkAnswer()">Trả lời</button>
+      <p id="warning" class="warning"></p>
+      <p>Điểm: <span id="score">0</span></p>
+      <div id="score-fly-container"></div>
+
+      <h2>Bảng xếp hạng</h2>
+      <ul id="leaderboard"></ul>
+    </div>
+
   </div>
 
-  <div id="game" style="display:none; margin-top:20px;">
-    <p id="timer">Thời gian: 0</p>
-    <p id="question"></p>
-    <input id="answer" placeholder="Nhập kết quả">
-    <button onclick="submitAnswer()">Trả lời</button>
-    <p id="scoreText">Điểm: 0</p>
-    <button onclick="endGame()">Kết thúc</button>
-  </div>
-
-  <div id="leaderboard">
-    <h3>Bảng xếp hạng</h3>
-    <ol id="board"></ol>
-  </div>
-
-  <script>
-    const API = "https://hk65backend-ewcz.onrender.com"; // backend Render
-    let score = 0, timeLimit = 30, timeLeft = 0, num1, num2, playerName = "";
-    let timerInterval;
-
-    // Các mốc thời gian = ước của 90 ≥ 10
-    const divisors = [10, 15, 18, 30, 45, 90];
-    const select = document.getElementById("timeSelect");
-    divisors.forEach(d => {
-      const opt = document.createElement("option");
-      opt.value = d;
-      opt.textContent = d + " giây";
-      select.appendChild(opt);
-    });
-
-    async function loadLeaderboard() {
-      try {
-        const res = await fetch(`${API}/leaderboard`);
-        const data = await res.json();
-        const board = document.getElementById("board");
-        board.innerHTML = "";
-        data.forEach(p => {
-          const li = document.createElement("li");
-          li.textContent = `${p.username}: ${p.score} điểm`;
-          board.appendChild(li);
-        });
-      } catch (e) {
-        console.error("Không tải được leaderboard", e);
-      }
-    }
-
-    function startGame() {
-      playerName = document.getElementById("username").value.trim();
-      if (!playerName) return alert("Hãy nhập tên!");
-      score = 0;
-      timeLimit = parseInt(select.value);
-      timeLeft = timeLimit;
-      document.getElementById("scoreText").textContent = "Điểm: 0";
-      document.getElementById("game").style.display = "block";
-      document.getElementById("timer").textContent = "Thời gian: " + timeLeft;
-
-      // Reset và bắt đầu đồng hồ
-      clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        document.getElementById("timer").textContent = "Thời gian: " + timeLeft;
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          endGame();
-        }
-      }, 1000);
-
-      nextQuestion();
-    }
-
-    function nextQuestion() {
-      num1 = Math.floor(Math.random() * 10) + 1;
-      num2 = Math.floor(Math.random() * 10) + 1;
-      document.getElementById("question").textContent = `${num1} + ${num2} = ?`;
-      document.getElementById("answer").value = "";
-    }
-
-    function submitAnswer() {
-      const ans = parseInt(document.getElementById("answer").value);
-      if (ans === num1 + num2) {
-        score += 90 / timeLimit;
-        document.getElementById("scoreText").textContent = "Điểm: " + Math.floor(score);
-      }
-      nextQuestion();
-    }
-
-    async function endGame() {
-      clearInterval(timerInterval);
-      if (!playerName || score <= 0) {
-        document.getElementById("game").style.display = "none";
-        return;
-      }
-      try {
-        await fetch(`${API}/submit`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: playerName, score: Math.floor(score) })
-        });
-        alert("Điểm đã được lưu!");
-        await loadLeaderboard(); // Cập nhật lại BXH ngay
-      } catch (e) {
-        console.error("Không lưu được điểm", e);
-      }
-      document.getElementById("game").style.display = "none";
-    }
-
-    // Load bảng xếp hạng ban đầu
-    loadLeaderboard();
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
