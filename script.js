@@ -1,150 +1,140 @@
+const API = "https://hk65backend-ewcz.onrender.com"; // backend Render của bạn
+
 let playerName = "";
 let score = 0;
 let timeLeft = 0;
 let timer;
-let selectedTime = 30; // mặc định 30 giây
+let currentAnswer = 0;
 
-// Đổi thành link Render backend của bạn
-const API = "https://hk65backend-ewcz.onrender.com"; 
+// Tính các ước của 90 >= 10
+function getDivisorsOf90() {
+  const divisors = [];
+  for (let i = 10; i <= 90; i++) {
+    if (90 % i === 0) divisors.push(i);
+  }
+  return divisors;
+}
 
-// Các mốc thời gian hợp lệ (ước của 90 ≥ 10)
-const validTimes = [10, 15, 18, 30, 45, 90];
-const timeSelect = document.getElementById("time-select");
-validTimes.forEach(t => {
-  let opt = document.createElement("option");
-  opt.value = t;
-  opt.textContent = t + " giây";
-  timeSelect.appendChild(opt);
-});
+// Tạo options cho select thời gian
+window.onload = () => {
+  const select = document.getElementById("timeSelect");
+  getDivisorsOf90().forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t + " giây";
+    select.appendChild(opt);
+  });
+  loadLeaderboard();
 
-// Bắt đầu game
-document.getElementById("start-btn").addEventListener("click", () => {
-  playerName = document.getElementById("player-name").value.trim();
-  selectedTime = parseInt(timeSelect.value);
+  document.getElementById("answerInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") checkAnswer();
+  });
+};
 
+async function startGame() {
+  playerName = document.getElementById("playerName").value.trim();
   if (!playerName) {
-    alert("Bạn cần nhập tên trước khi chơi!");
+    alert("Hãy nhập tên!");
     return;
   }
 
-  document.getElementById("setup").style.display = "none";
-  document.getElementById("game").style.display = "block";
-  document.getElementById("show-name").textContent = playerName;
-
-  score = 0;
-  document.getElementById("score").textContent = score;
-
+  const selectedTime = parseInt(document.getElementById("timeSelect").value);
   timeLeft = selectedTime;
-  document.getElementById("time").textContent = timeLeft;
 
-  startTimer();
-  generateQuestion();
-});
-
-// Sinh phép toán ngẫu nhiên (2 số < 100, chia phải nguyên)
-function generateQuestion() {
-  let num1 = Math.floor(Math.random() * 100);
-  let num2 = Math.floor(Math.random() * 100);
-  let operators = ["+", "-", "×", "÷"];
-  let operator = operators[Math.floor(Math.random() * operators.length)];
-
-  if (operator === "-") {
-    if (num2 > num1) [num1, num2] = [num2, num1]; // tránh âm
-  }
-  if (operator === "÷") {
-    num2 = Math.floor(Math.random() * 99) + 1; // tránh chia 0
-    let multiplier = Math.floor(Math.random() * 10); // số nhân ngẫu nhiên
-    num1 = num2 * multiplier; // để chia hết
+  // Nếu admin -> reset bảng xếp hạng
+  if (playerName === "admin hljhung") {
+    await fetch(`${API}/reset`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: playerName })
+    });
+    alert("Admin đã reset bảng xếp hạng!");
   }
 
-  let question = `${num1} ${operator} ${num2}`;
-  let answer;
-  switch (operator) {
-    case "+": answer = num1 + num2; break;
-    case "-": answer = num1 - num2; break;
-    case "×": answer = num1 * num2; break;
-    case "÷": answer = num1 / num2; break;
-  }
+  document.getElementById("welcomeScreen").style.display = "none";
+  document.getElementById("gameScreen").style.display = "block";
+  document.getElementById("timeLeft").innerText = timeLeft;
 
-  document.getElementById("question").textContent = question;
-  document.getElementById("answer").value = "";
-  document.getElementById("answer").dataset.correct = answer;
-}
-
-// Nhấn Enter để trả lời
-document.getElementById("answer").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") checkAnswer();
-});
-
-// Kiểm tra đáp án
-function checkAnswer() {
-  const input = document.getElementById("answer");
-  const warning = document.getElementById("warning");
-  const value = input.value.trim();
-
-  if (!/^-?\d+$/.test(value)) {
-    warning.textContent = "Cần nhập một số!";
-    return;
-  }
-  warning.textContent = "";
-
-  let correct = parseInt(input.dataset.correct);
-  if (parseInt(value) === correct) {
-    let addScore = Math.floor(90 / selectedTime);
-    score += addScore;
-    document.getElementById("score").textContent = score;
-    showFloatingScore("+" + addScore);
-  }
-
-  generateQuestion();
-}
-
-// Hiệu ứng điểm bay lên
-function showFloatingScore(text) {
-  const float = document.createElement("div");
-  float.textContent = text;
-  float.classList.add("floating-score");
-  float.style.left = "50%";
-  float.style.top = "50%";
-  document.body.appendChild(float);
-
-  setTimeout(() => float.remove(), 1000);
-}
-
-// Đếm ngược thời gian
-function startTimer() {
+  loadQuestion();
   timer = setInterval(() => {
     timeLeft--;
-    document.getElementById("time").textContent = timeLeft;
-
-    if (timeLeft <= 0) {
-      clearInterval(timer);
-      endGame();
-    }
+    document.getElementById("timeLeft").innerText = timeLeft;
+    if (timeLeft <= 0) endGame();
   }, 1000);
 }
 
-// Kết thúc game
-function endGame() {
-  document.getElementById("game").innerHTML = `
-    <h2>Hết giờ!</h2>
-    <p>Điểm của bạn: <strong>${score}</strong></p>
-    <button onclick="saveScore()">Lưu điểm</button>
-  `;
+function loadQuestion() {
+  let a = Math.floor(Math.random() * 100);
+  let b = Math.floor(Math.random() * 100);
+  const ops = ["+", "-", "*", "/"];
+  let op = ops[Math.floor(Math.random() * ops.length)];
+
+  if (op === "/") {
+    while (b === 0 || a % b !== 0) {
+      a = Math.floor(Math.random() * 100);
+      b = Math.floor(Math.random() * 100) || 1;
+    }
+  }
+
+  document.getElementById("question").innerText = `${a} ${op} ${b} = ?`;
+  currentAnswer = eval(`${a} ${op} ${b}`);
+  document.getElementById("answerInput").value = "";
 }
 
-// Gửi điểm về server Render
-function saveScore() {
-  fetch(API + "/save", {
+function checkAnswer() {
+  const input = document.getElementById("answerInput").value.trim();
+  const warning = document.getElementById("warning");
+
+  if (input === "" || isNaN(input)) {
+    warning.innerText = "Cần nhập một số";
+    return;
+  }
+  warning.innerText = "";
+
+  if (parseInt(input) === currentAnswer) {
+    const points = 90 / parseInt(document.getElementById("timeSelect").value);
+    score += points;
+    document.getElementById("score").innerText = score;
+
+    showFloatingPoints("+" + points);
+  }
+  loadQuestion();
+}
+
+function showFloatingPoints(text) {
+  const floating = document.createElement("div");
+  floating.className = "floating";
+  floating.innerText = text;
+  floating.style.left = "50%";
+  floating.style.top = "50%";
+  document.getElementById("floatingPoints").appendChild(floating);
+  setTimeout(() => floating.remove(), 1000);
+}
+
+function endGame() {
+  clearInterval(timer);
+  document.getElementById("gameScreen").style.display = "none";
+  document.getElementById("endScreen").style.display = "block";
+  document.getElementById("finalScore").innerText = score;
+}
+
+async function saveScore() {
+  await fetch(`${API}/leaderboard`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: playerName, score })
-  })
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById("game").innerHTML += `
-      <h3>Bảng xếp hạng</h3>
-      <ul>${data.map(p => `<li>${p.name}: ${p.score}</li>`).join("")}</ul>
-    `;
+  });
+  loadLeaderboard();
+}
+
+async function loadLeaderboard() {
+  const res = await fetch(`${API}/leaderboard`);
+  const data = await res.json();
+  const list = document.getElementById("leaderboardList");
+  list.innerHTML = "";
+  data.forEach(p => {
+    const li = document.createElement("li");
+    li.textContent = `${p.name}: ${p.score}`;
+    list.appendChild(li);
   });
 }
