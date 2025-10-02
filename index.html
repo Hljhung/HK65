@@ -7,25 +7,34 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="setup" class="container">
+  <div id="welcomeScreen">
     <h1>Solo tính nhẩm (by TDH HK65)</h1>
-    <input id="player-name" type="text" placeholder="Nhập tên của bạn">
-    <br><br>
-    <label for="time-select">Chọn thời gian:</label>
-    <select id="time-select"></select>
-    <br><br>
-    <button id="start-btn">Bắt đầu</button>
+    <input type="text" id="playerName" placeholder="Nhập tên người chơi">
+    <label for="timeSelect">Chọn thời gian (giây):</label>
+    <select id="timeSelect"></select>
+    <button onclick="startGame()">Bắt đầu</button>
   </div>
 
-  <div id="game" class="container" style="display:none;">
-    <div id="info">
-      <p>Tên: <span id="show-name"></span></p>
-      <p>Điểm: <span id="score">0</span></p>
-      <p>Thời gian: <span id="time">0</span> giây</p>
-    </div>
+  <div id="gameScreen" style="display: none;">
     <h2 id="question"></h2>
-    <input id="answer" type="text" placeholder="Nhập câu trả lời và nhấn Enter">
-    <p id="warning" style="color:red;"></p>
+    <input type="text" id="answerInput" placeholder="Nhập đáp án">
+    <p id="warning" class="warning"></p>
+    <p>Điểm: <span id="score">0</span></p>
+    <p>Thời gian còn lại: <span id="timeLeft"></span> giây</p>
+    <button onclick="endGame()">Kết thúc</button>
+    <div id="floatingPoints"></div>
+  </div>
+
+  <div id="endScreen" style="display: none;">
+    <h2>Trò chơi kết thúc!</h2>
+    <p>Tổng điểm của bạn: <span id="finalScore"></span></p>
+    <button onclick="saveScore()">Lưu điểm</button>
+    <button onclick="location.reload()">Chơi lại</button>
+  </div>
+
+  <div id="leaderboard">
+    <h2>Bảng xếp hạng</h2>
+    <ul id="leaderboardList"></ul>
   </div>
 
   <script src="script.js"></script>
